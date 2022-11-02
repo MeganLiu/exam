@@ -1,0 +1,91 @@
+how to check ec2 ssh connection failure
+
+ssh -i public_key_my.pem   ec2-user@10.0.24.51
+
+sudo chmod 700 /root/.ssh
+sudo chmod 600 /root/.ssh/authorized_keys
+
+amending the 
+/etc/ssh/sshd_config PasswordAuthentication yes 
+
+re-started the service using
+sudo systemctl restart sshd
+
+[vini@random ~]$ ls -ld ~
+
+drwx------. 3 vini vini 127 Nov 23 15:29 /home/vini
+if it is not like this, run
+
+chmod 0700 /home/your_home
+Now check .ssh folder
+
+[vini@random ~]$ ls -ld  /home/vini/.ssh/
+
+drwx------. 2 vini vini 29 Nov 23 15:28 /home/vini/.ssh/
+if it is not looking like this, run
+
+chmod 0700 /home/your_home/.ssh
+now make sure that authorized_keys looks like this
+
+[vini@venon ~]$ ls -ld  /home/vini/.ssh/authorized_keys 
+
+-rw-------. 1 vini vini 393 Nov 23 15:28 /home/vini/.ssh/authorized_keys
+or just run
+
+chmod 0600 /home/your_home/.ssh/authorized_keys
+After that go to /etc/ssh/sshd_config
+
+For best security set
+
+PermitRootLogin no
+
+PubkeyAuthentication yes
+keep as yes for testing purposes
+
+PasswordAuthentication yes
+Make sure that
+
+ChallengeResponseAuthentication no
+Comment those lines for GSSAPI
+
+# #GSSAPIAuthentication yes
+# #GSSAPICleanupCredentials no
+Make sure that is set to UsePAM yes
+
+UsePAM yes
+now restart sshd service
+
+systemctl restart sshd 
+on the client side
+
+cd /home/your_home/.ssh
+
+As everybody else has already said you need to edit /etc/ssh/sshd_config and change PasswordAuthentication no to PasswordAuthentication yes
+
+I ran into this problem setting up a Vagrant box - so therefore it makes sense to script this and do it automatically in a shell provisioner:
+
+sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config;
+
+sudo systemctl restart sshd;
+
+vi /etc/ssh/sshd_config
+
+1.PubkeyAuthentication yes
+
+2.PasswordAuthentication yes
+
+3.GSSAPIKeyExchange no
+
+4.GSSAPICleanupCredentials no
+
+systemctl restart sshd
+
+ssh-keygen
+
+chmod 777 /root/.ssh/id_rsa.pub 
+
+ssh-copy-id -i /root/.ssh/id_rsa.pub user@ipaddress
+
+According to the line debug1: Authentications that can continue: publickey,gssapi-with-mic , ssh password authentication is disabled and apparently you are not using public key authentication.
+
+Login to your server using console and open /etc/ssh/sshd_config file with an editor with root user and look for line PasswordAuthentication then set it's value to yes and finally restart sshd service.
